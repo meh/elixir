@@ -31,10 +31,6 @@ defmodule Kernel.ErrorsTest do
     assert "nofile:2: missing terminator: \"\"\" (for heredoc starting at line 1)" == format_rescue '"""\nbar'
   end
 
-  test :invalid_partial do
-    assert "nofile:1: partial variable &2 cannot be defined without &1" == format_rescue '&2 + 3'
-  end
-
   test :unexpected_end do
     assert "nofile:1: unexpected token: end" == format_rescue '1 end'
   end

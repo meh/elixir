@@ -21,11 +21,8 @@ handle(_Original, _S, _Opt) ->
 validate(Meta, Def, S) ->
   validate(Meta, lists:sort(Def), 1, S).
 
-validate(Meta, [{ Pos, Item }|T], Pos, S) ->
+validate(Meta, [{ Pos, Item }|T], _Pos, S) ->
   [Item|validate(Meta, T, Pos + 1, S)];
-
-validate(Meta, [{ Pos, _ }|_], Expected, S) ->
-  elixir_errors:syntax_error(Meta, S#elixir_scope.file, "partial variable &~w cannot be defined without &~w", [Pos, Expected]);
 
 validate(_Meta, [], _Pos, _S) ->
   [].
