@@ -2808,10 +2808,18 @@ defmodule Kernel do
       true
       iex> 3 in 1..3
       true
+      iex> 3 in 0..4<>2
+      false
 
   """
   defmacro first .. last do
-    { :{}, [], [Elixir.Range, first, last] }
+    case last do
+      { :<>, _, [last, step] } ->
+        { :{}, [], [Elixir.Range, first, last, step] }
+
+      last ->
+        { :{}, [], [Elixir.Range, first, last, nil] }
+    end
   end
 
   @doc """

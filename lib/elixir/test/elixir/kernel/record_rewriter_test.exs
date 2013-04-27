@@ -86,7 +86,7 @@ defmodule Kernel.RecordRewriterTest do
 
   test "inside body with nested tuple" do
     clause = clause(fn(x = Range[]) -> ^x = Range[first: { :hello, 2 }] end)
-    assert optimize_clause(clause) == { clause, [x: Range], { Range, [nil, { :hello, nil }, nil] } }
+    assert optimize_clause(clause) == { clause, [x: Range], { Range, [nil, { :hello, nil }, nil, nil] } }
   end
 
   test "conflicting definition" do
@@ -166,7 +166,7 @@ defmodule Kernel.RecordRewriterTest do
     assert optimize_clause(clause) == { clause, [x: Range], { Range, nil } }
 
     clause = clause(fn -> case something do x = Range[first: { :foo, 2 }] -> x; Range[first: { :foo, 2 }] = x -> x end end)
-    assert optimize_clause(clause) == { clause, [x: Range], { Range, [nil, { :foo, nil }, nil] } }
+    assert optimize_clause(clause) == { clause, [x: Range], { Range, [nil, { :foo, nil }, nil, nil] } }
   end
 
   test "inside receive" do

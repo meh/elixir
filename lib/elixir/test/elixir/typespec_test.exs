@@ -211,7 +211,7 @@ defmodule Typespec.TypeTest do
       @type mytype :: Range[first: integer]
     end
     assert {:mytype,{:type, _, :tuple,
-             [{:atom, _, Range}, {:type, _, :integer, []}, {:type, _, :any, []}]}, []} = spec
+             [{:atom, _, Range}, {:type, _, :integer, []}, {:type, _, :any, []}, {:type, _, :any, []}]}, []} = spec
   end
 
   test "@type with parameters" do

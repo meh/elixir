@@ -277,20 +277,20 @@ translate_in(Meta, Left, Right, S) ->
       lists:foldl(fun(X, Acc) ->
         { op, Line, 'orelse', { op, Line, '==', Var, { integer, Line, X } }, Acc }
       end, { op, Line, '==', Var, { integer, Line, H } }, T);
-    { tuple, _, [{ atom, _, 'Elixir.Range' }, Start, End] } ->
-      case { Start, End } of
-        { { K1, _, StartInt }, { K2, _, EndInt } } when ?IN_TYPES(K1), ?IN_TYPES(K2), StartInt =< EndInt ->
-          increasing_compare(Line, Var, Start, End);
-        { { K1, _, _ }, { K2, _, _ } } when ?IN_TYPES(K1), ?IN_TYPES(K2) ->
-          decreasing_compare(Line, Var, Start, End);
+    { tuple, _, [{ atom, _, 'Elixir.Range' }, Start, End, Step] } ->
+      case { Start, End, Step } of
+        { { K1, _, StartInt }, { K2, _, EndInt }, { K3, _, _ } } when ?IN_TYPES(K1), ?IN_TYPES(K2), ?IN_TYPES(K3), StartInt =< EndInt ->
+          increasing_compare(Line, Var, Start, End, Step);
+        { { K1, _, _ }, { K2, _, _ }, { K3, _, _ } } when ?IN_TYPES(K1), ?IN_TYPES(K2), ?IN_TYPES(K3) ->
+          decreasing_compare(Line, Var, Start, End, Step);
         _ ->
           { op, Line, 'orelse',
             { op, Line, 'andalso',
-              { op, Line, '=<', Start, End},
-              increasing_compare(Line, Var, Start, End) },
+              { op, Line, '=<', Start, End },
+              increasing_compare(Line, Var, Start, End, Step) },
             { op, Line, 'andalso',
-              { op, Line, '<', End, Start},
-              decreasing_compare(Line, Var, Start, End) } }
+              { op, Line, '<', End, Start },
+              decreasing_compare(Line, Var, Start, End, Step) } }
       end;
     _ ->
       syntax_error(Meta, S#elixir_scope.file, "invalid args for operator in, it expects an explicit array or an explicit range on the right side")
@@ -301,12 +301,27 @@ translate_in(Meta, Left, Right, S) ->
     false -> { Var, Expr, SV }
   end.
 
-increasing_compare(Line, Var, Start, End) ->
+increasing_compare(Line, Var, Start, End, { atom, _, nil }) ->
   { op, Line, 'andalso',
     { op, Line, '>=', Var, Start },
-    { op, Line, '=<', Var, End } }.
+    { op, Line, '=<', Var, End } };
 
-decreasing_compare(Line, Var, Start, End) ->
+increasing_compare(Line, Var, Start, End, Step) ->
+  { op, Line, 'andalso',
+    { op, Line, '>=', Var, Start },
+    { op, Line, 'andalso',
+      { op, Line, '=<', Var, End },
+      { op, Line, '==',
+        { integer, Line, 0 },
+        { op, Line, 'rem',
+          { op, Line, '-', Var, Start }, Step } } } }.
+
+decreasing_compare(Line, Var, Start, End, { atom, _, nil }) ->
+  { op, Line, 'andalso',
+    { op, Line, '=<', Var, Start },
+    { op, Line, '>=', Var, End } };
+
+decreasing_compare(Line, Var, Start, End, _Step) ->
   { op, Line, 'andalso',
     { op, Line, '=<', Var, Start },
     { op, Line, '>=', Var, End } }.
