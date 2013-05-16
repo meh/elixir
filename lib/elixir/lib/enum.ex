@@ -64,6 +64,78 @@ defprotocol Enum.Iterator do
   def count(collection)
 end
 
+defmodule Enum.Iterator.Behaviour do
+  @moduledoc %B"""
+  This is a helper to define unimplemented default protocol functions, these
+  are `count/1`, `empty?/1` and `member?/2`.
+
+  To use it just `use Enum.Iterator.Behaviour` in the protocol implementation.
+  """
+
+  @doc false
+  defmacro __using__(_opts) do
+    quote do
+      def count(coll) do
+        case iterator(coll) do
+          { iterator, pointer } ->
+            do_count(pointer, iterator, 0)
+
+          list ->
+            length list
+        end
+      end
+
+      defp do_count(:stop, _, acc) do
+        acc
+      end
+
+      defp do_count({ _, next }, iterator, acc) do
+        do_count(iterator.(next), iterator, acc + 1)
+      end
+
+      def member?(coll, term) do
+        case iterator(coll) do
+          { iterator, pointer } ->
+            do_member?(pointer, iterator, term)
+
+          list ->
+            List.member?(list, term)
+        end
+      end
+
+      defp do_member?(:stop, _, term) do
+        false
+      end
+
+      defp do_member?({ h, _ }, iterator, term) when h == term do
+        true
+      end
+
+      defp do_member?({ _, next }, iterator, term) do
+        do_member?(iterator.(next), iterator, term)
+      end
+
+      def empty?(coll) do
+        case iterator(coll) do
+          { _, :stop } ->
+            true
+
+          { _, _ } ->
+            false
+
+          [] ->
+            true
+
+          _ ->
+            false
+        end
+      end
+
+      defoverridable count: 1, member: 2, empty?: 1
+    end
+  end
+end
+
 defmodule Enum do
   alias Enum.Iterator, as: I
 
